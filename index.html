@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d0d0d">
+<title>GYM TRACKER</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #161616;
+    --border: #2a2a2a;
+    --accent: #c8f135;
+    --accent-dim: #9ab82a;
+    --text: #f0f0f0;
+    --text-muted: #666;
+    --green-bg: #1a2e00;
+    --green-border: #5a8a00;
+    --cell-size: 38px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  header .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .progress-bar-wrap {
+    padding: 10px 16px 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .progress-bar {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  .progress-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    min-width: 36px;
+    text-align: right;
+  }
+
+  .table-scroll {
+    overflow-x: auto;
+    padding: 10px 0 20px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    border-collapse: collapse;
+    min-width: 100%;
+  }
+
+  /* HEADER ROW */
+  thead tr th {
+    background: var(--surface);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    padding: 8px 4px;
+    text-align: center;
+    border: 1px solid var(--border);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+  }
+
+  thead tr th:first-child {
+    text-align: left;
+    padding-left: 12px;
+    min-width: 110px;
+    position: sticky;
+    left: 0;
+    z-index: 10;
+    background: var(--surface);
+  }
+
+  thead tr th.col-done {
+    color: var(--accent);
+  }
+
+  /* WEEK SEPARATOR */
+  tr.week-header td {
+    background: #111;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--accent-dim);
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    text-transform: uppercase;
+  }
+
+  /* DATA ROWS */
+  tbody tr.day-row {
+    transition: background 0.3s ease;
+  }
+
+  tbody tr.day-row.completed {
+    background: var(--green-bg) !important;
+  }
+
+  tbody tr.day-row:not(.completed):nth-child(even) {
+    background: rgba(255,255,255,0.015);
+  }
+
+  /* DAY CELL */
+  td.day-cell {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 0 8px 0 12px;
+    border: 1px solid var(--border);
+    white-space: nowrap;
+    min-width: 110px;
+    position: sticky;
+    left: 0;
+    background: inherit;
+    z-index: 5;
+  }
+
+  tbody tr.day-row.completed td.day-cell {
+    background: var(--green-bg);
+  }
+
+  tbody tr.day-row:not(.completed) td.day-cell {
+    background: var(--bg);
+  }
+
+  .day-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15px;
+    letter-spacing: 1px;
+    color: var(--text);
+  }
+
+  .day-date {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+
+  /* CHECKBOX CELLS */
+  td.check-cell {
+    width: var(--cell-size);
+    min-width: var(--cell-size);
+    height: 48px;
+    text-align: center;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  td.check-cell:active {
+    background: rgba(200, 241, 53, 0.08);
+  }
+
+  td.check-cell.done-cell {
+    border-color: var(--green-border);
+  }
+
+  /* Custom checkbox */
+  .cb-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  input[type="checkbox"] {
+    display: none;
+  }
+
+  .cb-box {
+    width: 22px;
+    height: 22px;
+    border: 1.5px solid var(--border);
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    background: transparent;
+  }
+
+  input[type="checkbox"]:checked + .cb-box {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .cb-box svg {
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.15s ease;
+  }
+
+  input[type="checkbox"]:checked + .cb-box svg {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* DONE column */
+  td.done-cell .cb-box {
+    border-color: #3a4a1a;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+  }
+
+  td.done-cell input[type="checkbox"]:checked + .cb-box {
+    background: var(--accent);
+    box-shadow: 0 0 10px rgba(200,241,53,0.4);
+  }
+
+  tr.completed td.done-cell .cb-box {
+    border-color: var(--accent-dim);
+  }
+
+  /* Reset button */
+  .footer {
+    padding: 20px 16px 40px;
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn-reset {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    letter-spacing: 1px;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  .btn-reset:active {
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .completed-badge {
+    display: inline-block;
+    font-size: 9px;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 1px;
+    background: var(--accent);
+    color: #0d0d0d;
+    border-radius: 3px;
+    padding: 1px 4px;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>GYM TRACKER</h1>
+    <div class="subtitle">Rutina de 2 semanas</div>
+  </div>
+</header>
+
+<div class="progress-bar-wrap">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-label" id="progressLabel">0%</div>
+</div>
+
+<div class="table-scroll">
+<table id="gymTable">
+  <thead>
+    <tr>
+      <th>DÍA</th>
+      <th>PECHO</th>
+      <th>ESPALDA</th>
+      <th>HOMBROS</th>
+      <th>BÍCEPS</th>
+      <th>TRÍCEPS</th>
+      <th>PIERNAS</th>
+      <th>FÚTBOL</th>
+      <th class="col-done">✓ CUMPLIDO</th>
+    </tr>
+  </thead>
+  <tbody id="tableBody"></tbody>
+</table>
+</div>
+
+<div class="footer">
+  <button class="btn-reset" onclick="resetAll()">↺ Reiniciar todo</button>
+</div>
+
+<script>
+const days = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+const muscles = ['pecho','espalda','hombros','biceps','triceps','piernas','futbol'];
+const ROWS = 14;
+const STORAGE_KEY = 'gymtracker_v1';
+
+let state = {};
+
+function loadState() {
+  try {
+    const s = localStorage.getItem(STORAGE_KEY);
+    if (s) state = JSON.parse(s);
+  } catch(e) {}
+}
+
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function getKey(row, col) { return `r${row}_c${col}`; }
+
+function buildTable() {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+
+  for (let w = 0; w < 2; w++) {
+    // Week separator
+    const sep = document.createElement('tr');
+    sep.className = 'week-header';
+    const sepTd = document.createElement('td');
+    sepTd.colSpan = 9;
+    sepTd.textContent = `— Semana ${w + 1} —`;
+    sep.appendChild(sepTd);
+    tbody.appendChild(sep);
+
+    for (let d = 0; d < 7; d++) {
+      const rowIdx = w * 7 + d;
+      const tr = document.createElement('tr');
+      tr.className = 'day-row';
+      tr.id = `row-${rowIdx}`;
+
+      // Day cell
+      const dayTd = document.createElement('td');
+      dayTd.className = 'day-cell';
+      dayTd.innerHTML = `<div class="day-name">${days[d]}</div><div class="day-date">Sem. ${w+1}</div>`;
+      tr.appendChild(dayTd);
+
+      // Muscle checkboxes
+      muscles.forEach((m, mi) => {
+        const td = document.createElement('td');
+        td.className = 'check-cell';
+        td.onclick = () => toggleCell(rowIdx, mi);
+        const key = getKey(rowIdx, mi);
+        const checked = state[key] || false;
+        td.innerHTML = buildCheckbox(`cb_${rowIdx}_${mi}`, checked);
+        tr.appendChild(td);
+      });
+
+      // Done column
+      const doneTd = document.createElement('td');
+      doneTd.className = 'check-cell done-cell';
+      doneTd.onclick = () => toggleDone(rowIdx);
+      const doneKey = getKey(rowIdx, 'done');
+      const doneChecked = state[doneKey] || false;
+      doneTd.innerHTML = buildCheckbox(`cb_${rowIdx}_done`, doneChecked);
+      tr.appendChild(doneTd);
+
+      if (doneChecked) tr.classList.add('completed');
+      tbody.appendChild(tr);
+    }
+  }
+  updateProgress();
+}
+
+function buildCheckbox(id, checked) {
+  return `<label class="cb-wrap" onclick="event.stopPropagation()">
+    <input type="checkbox" id="${id}" ${checked ? 'checked' : ''}>
+    <div class="cb-box">
+      <svg width="13" height="10" viewBox="0 0 13 10" fill="none">
+        <path d="M1.5 5L5 8.5L11.5 1.5" stroke="#0d0d0d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </label>`;
+}
+
+function toggleCell(row, col) {
+  const key = getKey(row, col);
+  state[key] = !state[key];
+  const cb = document.getElementById(`cb_${row}_${col}`);
+  if (cb) cb.checked = state[key];
+  saveState();
+  updateProgress();
+}
+
+function toggleDone(row) {
+  const key = getKey(row, 'done');
+  state[key] = !state[key];
+  const cb = document.getElementById(`cb_${row}_done`);
+  if (cb) cb.checked = state[key];
+  const tr = document.getElementById(`row-${row}`);
+  if (tr) tr.classList.toggle('completed', state[key]);
+  saveState();
+  updateProgress();
+}
+
+function updateProgress() {
+  let done = 0;
+  for (let r = 0; r < ROWS; r++) {
+    if (state[getKey(r, 'done')]) done++;
+  }
+  const pct = Math.round((done / ROWS) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = pct + '%';
+}
+
+function resetAll() {
+  if (!confirm('¿Reiniciar todo el progreso?')) return;
+  state = {};
+  saveState();
+  buildTable();
+}
+
+loadState();
+buildTable();
+</script>
+</body>
+</html>
